@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGLA PAG — The Next Step</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX compilation in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="effects.css">
+    <style>
+        :root {
+            --font-display: 'Syne', sans-serif;
+            --font-editorial: 'Cormorant Garamond', serif;
+            --font-utility: 'Space Mono', monospace;
+        }
+
+        body {
+            background-color: #060608;
+            color: #f4f4f5;
+            font-family: var(--font-display);
+            overflow-x: hidden;
+        }
+
+        .font-display { font-family: var(--font-display); }
+        .font-editorial { font-family: var(--font-editorial); }
+        .font-utility { font-family: var(--font-utility); }
+
+        /* Ambient background mesh with subtle lighting */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(15, 15, 20, 0.8) 0%, #060608 100%);
+        }
+
+        /* Technical grid overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.05;
+            background-image: linear-gradient(to right, #ffffff 1px, transparent 1px),
+                              linear-gradient(to bottom, #ffffff 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* High-contrast Glassmorphism panel */
+        .glass-panel {
+            background: rgba(18, 18, 24, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+        }
+
+        .glass-nav {
+            background: rgba(10, 10, 14, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Scroll animations */
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn-magnetic {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .btn-magnetic:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px -5px rgba(99, 102, 241, 0.4);
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500/30 selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ============================================================================
+        // AGLA PAG PLATFORM CONFIGURATION & DATA
+        // ============================================================================
+        const CONFIG = {
+          urls: {
+            youtubeChannel: "https://www.youtube.com/@AGLAPAG", 
+            youtubeChannelId: "UCz2B52R15pzQI7vfCxYBZhg", 
+            // Featured video embed link - Replace video ID here when ready
+            featuredVideo: "https://www.youtube.com/embed/dQw4w9WgXcQ", 
+            joinForm: "https://forms.gle/riTPqq9y4qRK7pbY8", 
+            contactForm: "https://forms.gle/LJ67pZYR45TxnD8F6" 
+          },
+          metrics: {
+            manualSubscriberCount: 117 // Subscriber count manually synced
+          },
+          content: {
+            heroTagline: "Free practical education for anyone ready to learn, build, and move forward.",
+            mission: "Access to practical, high-quality knowledge should not depend on where someone was born, who they know, or how much money they have.",
+            founder: {
+              name: "SHOURYA SINGH CHAUHAN",
+              role: "Founder, AGLA PAG",
+              photoUrl: "./shiv.jpeg", 
+              storyHeading: "Knowledge Is Dignity, Capability Is Peace.",
+              story: [
+                "I’ve spent a lot of time observing how people navigate their lives. Most people aren't lazy, and they aren't stupid. They are simply stuck because nobody ever handed them a map or taught them the practical, real-world skills that actually make a difference.",
+                "When someone has zero economic options and no clear path to build something for themselves, desperation creeps in. Desperation leads to bad decisions, toxic environments, crime, and avoidable hardship that damages families and communities. You cannot preach people out of poverty; you solve it by giving them practical capability and awareness.",
+                "My ultimate motto with AGLA PAG is simple: make the world more aware, educated, and kind. When a person learns how to build, communicate, use modern tools, and think clearly, their life changes. They gain self-reliance, economic independence, and self-respect. And when human beings respect themselves, they naturally treat others better—their families, neighbors, strangers, and animals.",
+                "AGLA PAG is my quiet commitment to that mission. Every course, video, and guide here will always remain 100% free. No gatekeeping, no fake promises. Just practical knowledge for anyone ready to take their next step."
+              ]
+            }
+          },
+          courses: [
+            {
+              id: "basics",
+              title: "01 — BASICS",
+              category: "FOUNDATION",
+              desc: "Essential digital literacy, practical problem solving, and building a foundation for modern skills.",
+              status: "AVAILABLE",
+              modules: "6",
+              link: "https://youtube.com/playlist?list=PLVrJfAtZCY5M&si=8d4oD4GZ9LIhT5hm"
+            },
+            {
+              id: "ai",
+              title: "02 — AI TOOLS",
+              category: "PRODUCTIVITY",
+              desc: "Learn how to practically leverage AI models for research, writing, automation, and real-world work.",
+              status: "AVAILABLE",
+              modules: "8",
+              link: "https://youtube.com/playlist?list=PLOo6Mx5gjplk&si=Jycg4ZIe73BzUBn9"
+            },
+            {
+              id: "editing",
+              title: "03 — EDITING",
+              category: "CREATIVE",
+              desc: "Video editing, sound design, visual storytelling, and digital content craftsmanship.",
+              status: "IN DEVELOPMENT",
+              modules: "10",
+              link: null
+            },
+            {
+              id: "speaking",
+              title: "04 — SPEAKING SKILLS",
+              category: "COMMUNICATION",
+              desc: "Articulate communication, public speaking, building confidence, and presenting ideas clearly.",
+              status: "COMING SOON",
+              modules: "5",
+              link: null
+            }
+          ]
+        };
+
+        const ArrowUpRightIcon = ({ className = "w-4 h-4" }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7V17" />
+          </svg>
+        );
+
+        const ChevronRightIcon = ({ className = "w-4 h-4" }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        );
+
+        const YoutubeIcon = ({ className = "w-5 h-5" }) => (
+          <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        );
+
+        const TwitterIcon = ({ className = "w-5 h-5" }) => (
+          <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        );
+
+        const ExternalLinkIcon = ({ className = "w-4 h-4" }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        );
+
+        const MenuIcon = ({ className = "w-6 h-6" }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        );
+
+        const CloseIcon = ({ className = "w-6 h-6" }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        );
+
+        const useScrollReveal = () => {
+          const [isVisible, setIsVisible] = useState(false);
+          const ref = useRef(null);
+
+          useEffect(() => {
+            const observer = new IntersectionObserver(
+              ([entry]) => {
+                if (entry.isIntersecting) {
+                  setIsVisible(true);
+                  if (ref.current) observer.unobserve(ref.current);
+                }
+              },
+              { threshold: 0.12 }
+            );
+
+            if (ref.current) observer.observe(ref.current);
+            return () => { if (ref.current) observer.unobserve(ref.current); };
+          }, []);
+
+          return [ref, isVisible];
+        };
+
+        const Navigation = ({ currentView, setView }) => {
+          const [isOpen, setIsOpen] = useState(false);
+
+          return (
+            <nav className="fixed top-0 left-0 w-full z-50 glass-nav px-6 md:px-12 py-5 flex justify-between items-center transition-all duration-300">
+              <button onClick={() => setView('home')} className="text-left group focus:outline-none">
+                <span className="font-display font-black text-2xl tracking-tighter text-white block group-hover:text-indigo-400 transition-colors">
+                  AGLA PAG
+                </span>
+                <span className="font-utility text-[11px] font-bold tracking-widest text-indigo-300 block -mt-1 uppercase">
+                  THE NEXT STEP
+                </span>
+              </button>
+
+              <div className="hidden md:flex items-center gap-10">
+                {['home', 'courses', 'about'].map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setView(view)}
+                    className={`font-utility text-xs tracking-widest uppercase transition-all duration-300 relative py-1 ${
+                      currentView === view ? 'text-white font-extrabold' : 'text-zinc-300 hover:text-white'
+                    }`}
+                  >
+                    {view}
+                    {currentView === view && (
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 rounded-full"></span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden md:block">
+                <a
+                  href={CONFIG.urls.joinForm}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2.5 rounded-full border border-white/60 bg-white/10 hover:bg-white hover:text-black font-utility text-xs font-bold tracking-widest text-white uppercase transition-all duration-300 btn-magnetic block shadow-md"
+                >
+                  JOIN MOVEMENT
+                </a>
+              </div>
+
+              <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Toggle Menu"
+              >
+                {isOpen ? <CloseIcon /> : <MenuIcon />}
+              </button>
+
+              {isOpen && (
+                <div className="absolute top-full left-0 w-full bg-zinc-950/95 border-b border-white/20 p-6 flex flex-col gap-6 md:hidden glass-panel shadow-2xl">
+                  {['home', 'courses', 'about'].map((view) => (
+                    <button
+                      key={view}
+                      onClick={() => { setView(view); setIsOpen(false); }}
+                      className={`font-display text-2xl font-bold uppercase text-left ${
+                        currentView === view ? 'text-indigo-400' : 'text-white'
+                      }`}
+                    >
+                      {view}
+                    </button>
+                  ))}
+                  <a
+                    href={CONFIG.urls.joinForm}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full text-center py-4 rounded-full bg-white text-black font-utility text-xs font-bold tracking-widest uppercase mt-2 shadow-lg"
+                  >
+                    JOIN THE MOVEMENT
+                  </a>
+                </div>
+              )}
+            </nav>
+          );
+        };
+
+        const HeroSection = ({ setView }) => {
+          return (
+            <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-start justify-center min-h-[85vh] z-10">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-indigo-400/60 bg-indigo-500/20 text-indigo-200 font-utility text-xs font-bold tracking-widest uppercase mb-8 shadow-sm">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                FREE PRACTICAL LEARNING
+              </div>
+
+              <h1 className="font-display font-black text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tighter text-white uppercase leading-[0.9] mb-8 max-w-6xl drop-shadow-md">
+                AGLA PAG
+                <span className="block text-indigo-200 font-editorial italic font-normal text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-normal normal-case mt-3">
+                  The Next Step.
+                </span>
+              </h1>
+
+              <p className="font-editorial text-2xl sm:text-3xl md:text-4xl text-zinc-100 leading-relaxed max-w-2xl mb-12 font-light">
+                {CONFIG.content.heroTagline}
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto">
+                <button
+                  onClick={() => setView('courses')}
+                  className="px-8 py-4 rounded-full bg-white text-zinc-950 font-utility text-xs tracking-widest font-extrabold uppercase hover:bg-indigo-300 hover:text-black transition-all text-center btn-magnetic shadow-lg"
+                >
+                  EXPLORE COURSES
+                </button>
+                <a
+                  href={CONFIG.urls.joinForm}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-4 rounded-full border-2 border-white/80 hover:border-white bg-white/10 hover:bg-white/20 text-white font-utility text-xs font-bold tracking-widest uppercase transition-all text-center btn-magnetic"
+                >
+                  JOIN THE MOVEMENT
+                </a>
+              </div>
+            </section>
+          );
+        };
+
+        const MovementCounter = () => {
+          const [ref, isVisible] = useScrollReveal();
+          const count = CONFIG.metrics.manualSubscriberCount;
+
+          return (
+            <section ref={ref} className={`py-16 border-y border-white/20 bg-zinc-900/60 relative z-10 reveal-up ${isVisible ? 'visible' : ''}`}>
+              <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+                <div>
+                  <span className="font-utility text-xs font-bold tracking-widest text-indigo-300 block mb-2 uppercase">
+                    MOVEMENT METRIC
+                  </span>
+                  <h2 className="font-display font-bold text-3xl md:text-4xl text-white tracking-tight">
+                    PEOPLE READY FOR THE NEXT STEP
+                  </h2>
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <span className="font-display font-black text-5xl md:text-6xl tracking-tighter text-white block">
+                      {count.toLocaleString()}
+                    </span>
+                    <span className="font-utility text-xs font-bold text-zinc-200 tracking-widest uppercase block">
+                      SUBSCRIBERS & LEARNERS
+                    </span>
+                  </div>
+
+                  <a
+                    href={CONFIG.urls.youtubeChannel}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-14 h-14 rounded-full border border-red-500/80 bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all btn-magnetic shadow-lg"
+                    title="Subscribe on YouTube"
+                  >
+                    <YoutubeIcon className="w-6 h-6" />
+                  </a>
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const FeaturedVideo = () => {
+          const [ref, isVisible] = useScrollReveal();
+
+          return (
+            <section ref={ref} className={`py-24 px-6 md:px-12 reveal-up ${isVisible ? 'visible' : ''}`}>
+              <div className="max-w-6xl mx-auto">
+                <div className="flex justify-between items-end mb-8 md:mb-12">
+                  <div>
+                    <span className="font-utility text-xs font-bold tracking-widest text-indigo-400 uppercase block mb-2">FEATURED CONTENT</span>
+                    <h2 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight text-white uppercase">
+                      The Next Step
+                    </h2>
+                  </div>
+                  <span className="hidden md:inline-block font-utility text-xs font-bold tracking-widest text-zinc-200 border border-white/40 px-4 py-1.5 rounded-full bg-white/10">
+                    FEATURED VIDEO
+                  </span>
+                </div>
+                
+                <div className="relative aspect-video w-full rounded-[1.5rem] md:rounded-[2rem] overflow-hidden glass-panel p-2 md:p-4 group">
+                  <div className="absolute -inset-10 bg-indigo-500/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 rounded-full"></div>
+                  
+                  <div className="relative w-full h-full rounded-[1rem] md:rounded-[1.5rem] overflow-hidden bg-black z-10 shadow-2xl">
+                    <iframe 
+                      className="w-full h-full"
+                      src={CONFIG.urls.featuredVideo} 
+                      title="Featured Video" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen>
+                    </iframe>
+                  </div>
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const MissionSection = () => {
+          const [ref, isVisible] = useScrollReveal();
+
+          return (
+            <section ref={ref} className={`py-24 px-6 md:px-12 bg-black/80 border-y border-white/20 reveal-up ${isVisible ? 'visible' : ''}`}>
+              <div className="max-w-5xl mx-auto text-center">
+                <span className="font-utility text-xs font-bold tracking-widest text-indigo-400 mb-6 block uppercase">
+                  OUR MISSION
+                </span>
+                <h2 className="font-editorial text-3xl md:text-5xl text-zinc-100 leading-relaxed max-w-4xl mx-auto font-normal italic">
+                  "{CONFIG.content.mission}"
+                </h2>
+                
+                <div className="mt-12 flex items-center justify-center gap-4">
+                  <div className="w-16 h-px bg-indigo-500/50"></div>
+                  <span className="font-utility font-bold text-xs tracking-widest text-zinc-300 uppercase">
+                    AGLA PAG CORE PRINCIPLE
+                  </span>
+                  <div className="w-16 h-px bg-indigo-500/50"></div>
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const CoursePreviewCard = ({ course }) => {
+          const [ref, isVisible] = useScrollReveal();
+          
+          return (
+            <div ref={ref} className={`glass-panel p-8 rounded-3xl flex flex-col h-full group hover:bg-zinc-900/90 hover:border-indigo-500/50 transition-all duration-500 reveal-up ${isVisible ? 'visible' : ''}`}>
+              <div className="flex justify-between items-start mb-8">
+                <span className="font-utility text-xs font-bold tracking-widest text-zinc-100 border border-white/30 bg-white/10 px-3 py-1 rounded">
+                  {course.category}
+                </span>
+                <span className={`font-utility text-[11px] font-extrabold tracking-widest flex items-center gap-1.5 ${course.status === 'AVAILABLE' ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                  <span className={`w-2.5 h-2.5 rounded-full ${course.status === 'AVAILABLE' ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`}></span>
+                  {course.status}
+                </span>
+              </div>
+              
+              <div className="mt-auto">
+                <h3 className="font-display font-extrabold text-2xl tracking-tight text-white mb-3 group-hover:text-indigo-300 transition-colors">
+                  {course.title}
+                </h3>
+                <p className="font-editorial text-zinc-200 text-xl leading-snug mb-8">
+                  {course.desc}
+                </p>
+                
+                <div className="flex justify-between items-center border-t border-white/20 pt-6 mt-auto">
+                  <span className="font-utility text-xs font-bold text-zinc-300">{course.modules} MODULES</span>
+                  
+                  {course.link ? (
+                    <a 
+                      href={course.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="px-4 py-2 rounded-full bg-white text-zinc-950 font-utility text-xs font-extrabold tracking-widest flex items-center gap-2 hover:bg-indigo-300 hover:text-black transition-all shadow-md"
+                    >
+                      WATCH <ArrowUpRightIcon />
+                    </a>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center text-zinc-400">
+                      <ArrowUpRightIcon />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const CoursePreviewSection = ({ setView }) => {
+          return (
+            <section id="courses" className="py-24 px-6 md:px-12 bg-black/50">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+                  <div>
+                    <h2 className="font-display text-4xl md:text-6xl font-black tracking-tighter text-white mb-3 drop-shadow-sm">
+                      LEARNING PILLARS
+                    </h2>
+                    <p className="font-utility text-xs font-bold text-indigo-300 tracking-widest uppercase">
+                      PRACTICAL KNOWLEDGE. FREE FOR EVERYONE.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setView('courses')} 
+                    className="font-utility text-xs font-bold tracking-widest text-white border-b-2 border-indigo-400 pb-1 hover:border-white transition-colors flex items-center gap-2"
+                  >
+                    VIEW FULL LIBRARY <ChevronRightIcon />
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {CONFIG.courses.map((course) => (
+                    <CoursePreviewCard key={course.id} course={course} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const LearningPhilosophy = () => {
+          const steps = ['LEARN', 'BUILD', 'EARN', 'GROW'];
+          const [ref, isVisible] = useScrollReveal();
+
+          return (
+            <section ref={ref} className={`py-32 px-6 md:px-12 reveal-up ${isVisible ? 'visible' : ''}`}>
+              <div className="max-w-5xl mx-auto">
+                <div className="text-center mb-16">
+                  <span className="font-utility text-xs font-bold tracking-widest text-indigo-400 uppercase block mb-3">OUR METHODOLOGY</span>
+                  <h2 className="font-display font-black text-3xl md:text-5xl text-white tracking-tight uppercase">THE LEARNING CYCLE</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-0 relative">
+                  <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-white/30 -z-10"></div>
+                  
+                  {steps.map((step, idx) => (
+                    <div key={idx} className="flex flex-col items-center md:items-start text-center md:text-left group relative bg-[#060608] p-4">
+                       <div className="w-12 h-12 rounded-full bg-zinc-900 border border-white/50 flex items-center justify-center font-utility text-xs font-bold text-zinc-100 mb-6 group-hover:border-indigo-400 group-hover:text-indigo-400 transition-colors">
+                        0{idx + 1}
+                       </div>
+                       <h3 className="font-display font-bold text-3xl md:text-4xl tracking-tighter text-white group-hover:-translate-y-2 transition-transform duration-300">
+                         {step}
+                       </h3>
+                       {idx !== steps.length - 1 && (
+                         <div className="md:hidden w-px h-12 bg-white/30 mt-6"></div>
+                       )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const CoursesPage = () => {
+          useEffect(() => { window.scrollTo(0, 0); }, []);
+          
+          return (
+            <div className="pt-36 px-6 md:px-12 min-h-screen">
+              <div className="max-w-7xl mx-auto">
+                <header className="mb-20">
+                  <span className="font-utility text-xs font-bold tracking-widest text-indigo-400 uppercase block mb-4">OPEN ACCESS</span>
+                  <h1 className="font-display font-black text-5xl md:text-8xl tracking-tighter text-white uppercase mb-6">
+                    Library
+                  </h1>
+                  <p className="font-editorial text-2xl md:text-3xl text-zinc-100 max-w-2xl">
+                    Practical modules designed to build real capability. Start anywhere.
+                  </p>
+                </header>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-32">
+                  {CONFIG.courses.map((course, idx) => (
+                    <div key={course.id} className="glass-panel p-8 md:p-12 rounded-[2rem] flex flex-col group hover:border-indigo-500/60 transition-all duration-300">
+                      <div className="flex justify-between items-center mb-12">
+                         <span className="font-display text-4xl font-bold text-white/50 group-hover:text-white transition-colors">0{idx + 1}</span>
+                         <span className={`font-utility text-xs font-bold tracking-widest border px-4 py-1.5 rounded-full ${course.status === 'AVAILABLE' ? 'border-emerald-400/80 text-emerald-300 bg-emerald-500/20' : 'border-white/40 text-zinc-300 bg-white/10'}`}>
+                            {course.status}
+                         </span>
+                      </div>
+                      
+                      <div className="mt-auto">
+                        <span className="font-utility text-xs font-bold tracking-widest text-indigo-300 mb-2 block uppercase">{course.category}</span>
+                        <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight text-white mb-4">
+                          {course.title}
+                        </h2>
+                        <p className="font-editorial text-xl text-zinc-200 mb-8 max-w-md">
+                          {course.desc}
+                        </p>
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-white/20 pt-6 gap-4">
+                          <div className="font-utility text-xs font-bold text-zinc-300 flex gap-6">
+                            <span>{course.modules} MODULES</span>
+                            <span>100% FREE</span>
+                          </div>
+
+                          {course.link ? (
+                            <a 
+                              href={course.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-6 py-3 bg-white text-zinc-950 font-utility text-xs tracking-widest rounded-full hover:bg-indigo-300 transition-colors font-extrabold text-center flex items-center justify-center gap-2 shadow-lg"
+                            >
+                              START PLAYLIST <ExternalLinkIcon />
+                            </a>
+                          ) : (
+                            <button className="px-6 py-3 bg-white/10 text-zinc-400 font-utility text-xs tracking-widest rounded-full font-bold cursor-not-allowed text-center" disabled>
+                              COMING SOON
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const AboutPage = () => {
+          useEffect(() => { window.scrollTo(0, 0); }, []);
+          const [imageLoaded, setImageLoaded] = useState(false);
+
+          return (
+            <div className="pt-36 px-6 md:px-12 min-h-screen">
+              <div className="max-w-6xl mx-auto">
+                
+                {/* Founder Card with Symbol Art Frame */}
+                <section className="mb-24">
+                  <div className="glass-panel p-8 md:p-14 rounded-[2.5rem] relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div className="absolute -top-32 -right-32 w-80 h-80 bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+                    
+                    {/* Left Column: Image Frame */}
+                    <div className="lg:col-span-5 relative group">
+                      <div className="absolute -top-3 -left-3 font-utility text-[10px] text-indigo-400 tracking-widest uppercase select-none z-20 bg-black/90 px-2 py-0.5 border border-white/20">
+                        ┌─[ REF:FOUNDER.01 ]─┐
+                      </div>
+                      <div className="absolute -bottom-3 -right-3 font-utility text-[10px] text-indigo-400 tracking-widest uppercase select-none z-20 bg-black/90 px-2 py-0.5 border border-white/20">
+                        └─[ AGLA PAG ]─┘
+                      </div>
+
+                      <div className="relative rounded-2xl overflow-hidden border border-white/30 bg-zinc-900 aspect-[4/5] shadow-2xl">
+                        <img 
+                          src={CONFIG.content.founder.photoUrl} 
+                          alt={CONFIG.content.founder.name}
+                          onLoad={() => setImageLoaded(true)}
+                          className={`w-full h-full object-cover object-center grayscale contrast-125 group-hover:grayscale-0 transition-all duration-700 ease-out ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+                          onError={(e) => {
+                            e.target.onerror = null; 
+                            e.target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        
+                        <div className="absolute bottom-4 left-4 right-4 bg-black/70 backdrop-blur-md p-3 rounded-xl border border-white/20 flex justify-between items-center">
+                          <span className="font-utility text-[11px] font-bold tracking-widest text-zinc-100">
+                            + {CONFIG.content.founder.name}
+                          </span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Founder Intro */}
+                    <div className="lg:col-span-7 relative z-10 flex flex-col justify-center">
+                      <span className="font-utility text-xs font-bold tracking-widest text-indigo-400 mb-4 block uppercase">
+                        [ FOUNDER STATEMENT ]
+                      </span>
+                      <h1 className="font-display font-black text-4xl md:text-6xl tracking-tighter text-white mb-3 uppercase">
+                        {CONFIG.content.founder.name}
+                      </h1>
+                      <p className="font-utility text-xs font-bold tracking-widest text-indigo-300 uppercase mb-8">
+                        {CONFIG.content.founder.role}
+                      </p>
+
+                      <h2 className="font-editorial italic text-2xl md:text-3xl text-zinc-100 mb-6 font-normal">
+                        "{CONFIG.content.founder.storyHeading}"
+                      </h2>
+
+                      <div className="flex gap-4">
+                         <a href={CONFIG.urls.youtubeChannel} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full border border-white/40 flex items-center justify-center text-zinc-200 hover:text-white hover:border-white transition-all btn-magnetic">
+                           <YoutubeIcon className="w-5 h-5" />
+                         </a>
+                         <a href="#" className="w-12 h-12 rounded-full border border-white/40 flex items-center justify-center text-zinc-200 hover:text-white hover:border-white transition-all btn-magnetic">
+                           <TwitterIcon className="w-5 h-5" />
+                         </a>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Founder Story Section */}
+                <section className="py-12 mb-24 border-t border-white/20 pt-16">
+                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                     <div className="lg:col-span-4">
+                       <span className="font-utility text-xs font-bold tracking-widest text-indigo-300 block mb-3 uppercase">
+                         OUR MOTTO & STORY
+                       </span>
+                       <h3 className="font-display font-bold text-3xl md:text-4xl tracking-tight text-white leading-tight">
+                         Why AGLA PAG Exists
+                       </h3>
+                       <div className="w-16 h-1 bg-indigo-500 mt-6 rounded-full"></div>
+                     </div>
+
+                     <div className="lg:col-span-8 font-editorial text-xl md:text-2xl text-zinc-200 leading-relaxed space-y-6">
+                        {CONFIG.content.founder.story.map((paragraph, index) => (
+                          <p key={index} className="first-letter:text-4xl first-letter:font-display first-letter:font-bold first-letter:text-indigo-400">
+                            {paragraph}
+                          </p>
+                        ))}
+                     </div>
+                   </div>
+                </section>
+                
+                {/* Call to Join */}
+                <section className="text-center py-20 border border-white/20 glass-panel rounded-[2rem] my-16">
+                   <h2 className="font-display font-black text-4xl md:text-6xl tracking-tighter text-white uppercase mb-6">
+                     BUILD THE NEXT STEP.
+                   </h2>
+                   <p className="font-editorial text-2xl text-zinc-100 max-w-xl mx-auto mb-8">
+                     Help us make practical knowledge free for everyone. Join the movement today.
+                   </p>
+                   <a href={CONFIG.urls.joinForm} target="_blank" rel="noopener noreferrer" 
+                      className="inline-block px-10 py-5 bg-white text-zinc-950 font-utility text-xs font-extrabold tracking-widest rounded-full hover:bg-indigo-300 transition-all btn-magnetic shadow-xl">
+                     JOIN THE MOVEMENT
+                   </a>
+                </section>
+
+              </div>
+            </div>
+          );
+        };
+
+        const Footer = ({ setView }) => {
+          return (
+            <footer className="mt-auto border-t border-white/20 bg-zinc-950 py-16 px-6 md:px-12 relative z-10">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                <div>
+                  <span className="font-display font-black text-2xl text-white block">AGLA PAG</span>
+                  <span className="font-utility text-xs font-bold text-indigo-300 tracking-widest uppercase">THE NEXT STEP</span>
+                </div>
+
+                <div className="flex gap-8">
+                  {['home', 'courses', 'about'].map((view) => (
+                    <button
+                      key={view}
+                      onClick={() => setView(view)}
+                      className="font-utility text-xs font-bold text-zinc-300 hover:text-white uppercase tracking-widest"
+                    >
+                      {view}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <a
+                    href={CONFIG.urls.contactForm}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-utility text-xs font-bold text-indigo-400 hover:underline tracking-widest uppercase"
+                  >
+                    CONTACT US
+                  </a>
+                </div>
+              </div>
+              
+              <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/10 text-center md:text-left">
+                <p className="font-utility text-[11px] font-bold text-zinc-400 tracking-widest uppercase">
+                  © {new Date().getFullYear()} AGLA PAG. ALL RIGHTS RESERVED.
+                </p>
+              </div>
+            </footer>
+          );
+        };
+
+        function App() {
+          const [currentView, setCurrentView] = useState('home');
+
+          const renderView = () => {
+            switch(currentView) {
+              case 'home':
+                return (
+                  <>
+                    <HeroSection setView={setCurrentView} />
+                    <MovementCounter />
+                    <FeaturedVideo />
+                    <MissionSection />
+                    <CoursePreviewSection setView={setCurrentView} />
+                    <LearningPhilosophy />
+                    
+                    {/* Fixed High Contrast Call to Action Section */}
+                    <section className="py-28 px-6 text-center relative z-10">
+                      <div className="max-w-4xl mx-auto glass-panel p-12 md:p-20 rounded-[2.5rem]">
+                        <h2 className="font-display font-black text-4xl md:text-6xl tracking-tighter text-white mb-8 drop-shadow-md">
+                          YOUR NEXT STEP STARTS HERE.
+                        </h2>
+                        <a 
+                          href={CONFIG.urls.joinForm} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-block px-10 py-5 bg-white text-zinc-950 font-utility text-xs font-extrabold tracking-widest rounded-full hover:bg-indigo-300 transition-all btn-magnetic shadow-2xl"
+                        >
+                          JOIN THE MOVEMENT
+                        </a>
+                      </div>
+                    </section>
+                  </>
+                );
+              case 'courses': return <CoursesPage />;
+              case 'about': return <AboutPage />;
+              default: return <HeroSection setView={setCurrentView} />;
+            }
+          };
+
+          return (
+            <div className="min-h-screen relative flex flex-col bg-[#060608]">
+              <div className="ambient-bg"></div>
+              <div className="noise-overlay"></div>
+              
+              <Navigation currentView={currentView} setView={setCurrentView} />
+              
+              <main className="flex-grow flex flex-col justify-start">
+                {renderView()}
+              </main>
+
+              <Footer setView={setCurrentView} />
+            </div>
+          );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+    <script src="animations.js" defer></script>
+</body>
+</html>
